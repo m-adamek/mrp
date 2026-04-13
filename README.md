@@ -4,7 +4,7 @@
 - kochani, venva sobie zrobcie i by git ignore byl, nie jest to jakies super-super ważne, ale przyda się, będzie czyściej,
 poza tym jest plik z requirements.txt, działa to tak jak u Kasi
 - można sobie zrobić brancha osobnego a potem go zmergować by nie pracować na mainie, tak sie chyba robi, idk :3 
-
+(robicie swojego brancha na vs, pracujecie na nim, committujecie, pushujecie, potem na githubie compare and merge i mergujecie jak jest ok) 
 
 
 ## TO DO:
