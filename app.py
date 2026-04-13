@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from logic import ghp, mrp
+from logic import ghp, mrp, full_mrp
 
 app = Flask(__name__)
 
@@ -36,6 +36,21 @@ def mrp_api():
 
     return jsonify(wynik)
 
+
+# z tego lecą wyniki pełne (w test.py możesz sprawdzić jak wygląda output):
+
+@app.route("/full_mrp", methods=["POST"])
+def full_mrp_api():
+    data = request.json
+
+    wynik = full_mrp(
+        data["popyt"],
+        data["zapasy"],
+        data["czasy"],
+        data["partie"]
+    )
+
+    return jsonify(wynik)
 
 
 
