@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "DZIALA"
+    return render_template("index.html")
 
 @app.route("/ghp", methods=["POST"])
 def ghp_api():

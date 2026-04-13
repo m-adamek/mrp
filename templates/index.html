@@ -1,12 +1,130 @@
 <!DOCTYPE html>
-<html>
-<body>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator GHP & MRP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
 
-<!--nie przywiazujcie sie do tego, losowo wpisane na razie by zachowac strukture plikow xd-->
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Planowanie Produkcji</h1>
 
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Kalkulator GHP</h5>
+                </div>
+                <div class="card-body">
+                    <form id="ghpForm">
+                        <div class="mb-3">
+                            <label class="form-label">Popyt</label>
+                            <input type="text" class="form-control" id="ghp-popyt" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Na stanie</label>
+                            <input type="number" class="form-control" id="ghp-stan" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Wielkość partii</label>
+                            <input type="number" class="form-control" id="ghp-partia">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Oblicz GHP</button>
+                    </form>
+                    
+                    <div class="mt-4 d-none" id="ghp-result-box">
+                        <h6>Wynik:</h6>
+                        <pre class="bg-dark text-success p-3 rounded" id="ghp-result"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<h2>MRP</h2>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Kalkulator MRP</h5>
+                </div>
+                
+                <div class="card-body">
+                    <form id="mrpForm">
+                        <div class="mb-3">
+                            <label class="form-label">Całkowite zapotrzebowanie</label>
+                            <input type="text" class="form-control" id="mrp-zapotrzebowanie" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Na stanie</label>
+                            <input type="number" class="form-control" id="mrp-stan" required>
+                        </div>
+                         <div class="mb-3">
+                            <label class="form-label">Czas realizacji</label>
+                            <input type="number" class="form-control" id="mrp-czas">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Wielkość partii</label>
+                            <input type="number" class="form-control" id="mrp-partia">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Oblicz MRP</button>
+                    </form>
+                    
+                    <div class="mt-4 d-none" id="mrp-result-box">
+                        <h6>Wynik:</h6>
+                        <pre class="bg-dark text-success p-3 rounded" id="mrp-result"></pre>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
+<script>
+    document.getElementById('ghpForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+
+        // 1. Pobieranie danych z formularza
+
+        const popytInput = document.getElementById('ghp-popyt').value;
+        const popytArray = popytInput.split(',').map(num => parseInt(num.trim()));
+        
+        const naStanie = parseInt(document.getElementById('ghp-stan').value);
+        
+        // Jeszcze nie wiem czy potrzebne
+        //const partiaInput = document.getElementById('ghp-partia').value;
+        //const partia = partiaInput ? parseInt(partiaInput) : null;
+
+        // 2. Przygotowanie paczki danych (JSON)
+        const requestData = {
+            popyt: popytArray,
+            na_stanie: naStanie,
+            partia: partia
+        };
+
+        try {
+            // 3. Wysłanie POST requesta do Twojego API we Flasku
+            const response = await fetch('/ghp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            const data = await response.json();
+
+            // 4. Wyświetlenie wyniku
+            document.getElementById('ghp-result-box').classList.remove('d-none');
+            // Formatowanie JSONa, żeby ładnie wyglądał na ekranie
+            document.getElementById('ghp-result').textContent = JSON.stringify(data, null, 2);
+
+        } catch (error) {
+            alert('Wystąpił błąd podczas połączenia z serwerem!');
+            console.error(error);
+        }
+    });
+</script>
 
 </body>
 </html>
