@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>GHP Calculator</h2>
+
+<input id="popyt" placeholder="np. 0,10,0,20,0,50">
+<input id="stan" placeholder="na stanie">
+
+<button onclick="policz()">Oblicz</button>
+
+<pre id="wynik"></pre>
+
+<script>
+async function policz() {
+    const popyt = document.getElementById("popyt").value.split(",").map(Number)
+    const stan = Number(document.getElementById("stan").value)
+
+    const res = await fetch("http://127.0.0.1:5000/ghp", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            popyt: popyt,
+            na_stanie: stan
+        })
+    })
+
+    const data = await res.json()
+    document.getElementById("wynik").innerText = JSON.stringify(data, null, 2)
+}
+</script>
+
+</body>
+</html>
