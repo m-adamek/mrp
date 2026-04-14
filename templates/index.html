@@ -91,9 +91,9 @@
         
         const naStanie = parseInt(document.getElementById('ghp-stan').value);
         
-        // Jeszcze nie wiem czy potrzebne
-        //const partiaInput = document.getElementById('ghp-partia').value;
-        //const partia = partiaInput ? parseInt(partiaInput) : null;
+        
+        const partiaInput = document.getElementById('ghp-partia').value;
+        const partia = partiaInput ? parseInt(partiaInput) : null;
 
         // 2. Przygotowanie paczki danych (JSON)
         const requestData = {
@@ -103,7 +103,7 @@
         };
 
         try {
-            // 3. Wysłanie POST requesta do Twojego API we Flasku
+            // 3. Wysłanie POST requesta do  API we Flasku
             const response = await fetch('/ghp', {
                 method: 'POST',
                 headers: {
@@ -120,10 +120,51 @@
             document.getElementById('ghp-result').textContent = JSON.stringify(data, null, 2);
 
         } catch (error) {
-            alert('Wystąpił błąd podczas połączenia z serwerem!');
+            alert('Wystąpił błąd!');
             console.error(error);
         }
     });
+    // --- LOGIKA DLA FORMULARZA MRP ---
+document.getElementById('mrpForm').addEventListener('submit', async function(e) {
+    e.preventDefault(); // Zatrzymuje przeładowanie strony
+
+    // 1. Pobieranie danych z formularza MRP
+    const zapotrzebowanieInput = document.getElementById('mrp-zapotrzebowanie').value;
+    const zapotrzebowanieArray = zapotrzebowanieInput.split(',').map(num => parseInt(num.trim()));
+    
+    const naStanie = parseInt(document.getElementById('mrp-stan').value);
+    const czasRealizacji = parseInt(document.getElementById('mrp-czas').value);
+    const partia = parseInt(document.getElementById('mrp-partia').value);
+
+    // 2. Przygotowanie paczki danych (JSON) zgodnie z wymaganiami endpointu /mrp
+    const requestData = {
+        zapotrzebowanie: zapotrzebowanieArray,
+        na_stanie: naStanie,
+        czas_realizacji: czasRealizacji,
+        partia: partia
+    };
+
+    try {
+        // 3. Wysłanie POST requesta do backendu Flaska
+        const response = await fetch('/mrp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        const data = await response.json();
+
+        // 4. Wyświetlenie wyniku w zielonym oknie
+        document.getElementById('mrp-result-box').classList.remove('d-none');
+        document.getElementById('mrp-result').textContent = JSON.stringify(data, null, 2);
+
+    } catch (error) {
+        alert('Wystąpił błąd!');
+        console.error(error);
+    }
+});
 </script>
 
 </body>
