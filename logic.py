@@ -41,8 +41,8 @@ def mrp(całkowite_zapotrzebowanie, na_stanie, czas_realizacji, wielkość_parti
         if przewidywane_na_stanie[i] < 0:
             zapotrzebowanie_netto[i] = abs(przewidywane_na_stanie[i])      #abs(-15) = 15
 
-            ilość = math.ceil(zapotrzebowanie_netto[i] / wielkość_partii) * wielkość_partii
-
+            ilość = wielkość_partii
+            
             planowane_przyjęcie_zamówień[i] = ilość
             przewidywane_na_stanie[i] += ilość
 

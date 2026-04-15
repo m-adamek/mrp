@@ -3,168 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalkulator GHP & MRP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>MRP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 
+
+  <!-- przycisk do wczytywania danych - trzeba go uładnić/przesunąć -->
+<form action="/upload" method="post" enctype="multipart/form-data">
+  <input type="file" name="file">
+  <button type="submit">Wczytaj dane</button>
+</form>
+
 <div class="container mt-5">
-    <h1 class="text-center mb-4">Planowanie Produkcji</h1>
+    <h1 class="text-center mb-4">Planowanie Produkcji (MRP)</h1>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Kalkulator GHP</h5>
-                </div>
-                <div class="card-body">
-                    <form id="ghpForm">
-                        <div class="mb-3">
-                            <label class="form-label">Popyt</label>
-                            <input type="text" class="form-control" id="ghp-popyt" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Na stanie</label>
-                            <input type="number" class="form-control" id="ghp-stan" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Wielkość partii</label>
-                            <input type="number" class="form-control" id="ghp-partia">
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Oblicz GHP</button>
-                    </form>
-                    
-                    <div class="mt-4 d-none" id="ghp-result-box">
-                        <h6>Wynik:</h6>
-                        <pre class="bg-dark text-success p-3 rounded" id="ghp-result"></pre>
-                    </div>
-                </div>
-            </div>
+    <!-- GHP INPUT -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Popyt produktu (GHP)</h5>
         </div>
+        <div class="card-body">
 
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Kalkulator MRP</h5>
-                </div>
-                
-                <div class="card-body">
-                    <form id="mrpForm">
-                        <div class="mb-3">
-                            <label class="form-label">Całkowite zapotrzebowanie</label>
-                            <input type="text" class="form-control" id="mrp-zapotrzebowanie" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Na stanie</label>
-                            <input type="number" class="form-control" id="mrp-stan" required>
-                        </div>
-                         <div class="mb-3">
-                            <label class="form-label">Czas realizacji</label>
-                            <input type="number" class="form-control" id="mrp-czas">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Wielkość partii</label>
-                            <input type="number" class="form-control" id="mrp-partia">
-                        </div>
-                        <button type="submit" class="btn btn-success w-100">Oblicz MRP</button>
-                    </form>
-                    
-                    <div class="mt-4 d-none" id="mrp-result-box">
-                        <h6>Wynik:</h6>
-                        <pre class="bg-dark text-success p-3 rounded" id="mrp-result"></pre>
-                    </div>
-                </div>
-                </div>
+            <label class="form-label">Popyt tygodniowy</label>
+            <div id="ghp-popyt-container">
+                <input type="number" class="form-control mb-2 ghp-input" placeholder="Tydzień 1">
             </div>
+
+            <button class="btn btn-outline-secondary w-100 mb-3" onclick="addGhpInput()">+ Dodaj tydzień</button>
+
         </div>
     </div>
+
+    <!-- PARAMETRY -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Parametry MRP (BOM)</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+
+                <div class="col-md-4">
+                    <h6>Zapas</h6>
+                    <input type="number" class="form-control mb-2" id="zap_zapalniczka" placeholder="Zapalniczka">
+                    <input type="number" class="form-control mb-2" id="zap_obudowa" placeholder="Obudowa">
+                    <input type="number" class="form-control mb-2" id="zap_mechanizm" placeholder="Mechanizm">
+                    <input type="number" class="form-control mb-2" id="zap_zbiornik" placeholder="Zbiornik">
+                    <input type="number" class="form-control mb-2" id="zap_kolko" placeholder="Kółko">
+                    <input type="number" class="form-control mb-2" id="zap_krzesiwo" placeholder="Krzesiwo">
+                </div>
+
+                <div class="col-md-4">
+                    <h6>Czas realizacji</h6>
+                    <input type="number" class="form-control mb-2" id="czas_zapalniczka">
+                    <input type="number" class="form-control mb-2" id="czas_obudowa">
+                    <input type="number" class="form-control mb-2" id="czas_mechanizm">
+                    <input type="number" class="form-control mb-2" id="czas_zbiornik">
+                    <input type="number" class="form-control mb-2" id="czas_kolko">
+                    <input type="number" class="form-control mb-2" id="czas_krzesiwo">
+                </div>
+
+                <div class="col-md-4">
+                    <h6>Wielkość partii</h6>
+                    <input type="number" class="form-control mb-2" id="part_zapalniczka">
+                    <input type="number" class="form-control mb-2" id="part_obudowa">
+                    <input type="number" class="form-control mb-2" id="part_mechanizm">
+                    <input type="number" class="form-control mb-2" id="part_zbiornik">
+                    <input type="number" class="form-control mb-2" id="part_kolko">
+                    <input type="number" class="form-control mb-2" id="part_krzesiwo">
+                </div>
+
+            </div>
+
+            <button class="btn btn-dark mt-3 w-100" onclick="runFullMRP()">Oblicz pełne MRP</button>
+        </div>
+    </div>
+
+    <div id="mrpTables" class="mt-5"></div>
+
 </div>
 
 <script>
-    document.getElementById('ghpForm').addEventListener('submit', async function(e) {
-        e.preventDefault(); 
 
-        // 1. Pobieranie danych z formularza
+// INPUT
+function addGhpInput() {
+    const c = document.getElementById("ghp-popyt-container");
+    const input = document.createElement("input");
+    input.type = "number";
+    input.className = "form-control mb-2 ghp-input";
+    input.placeholder = "Tydzień " + (c.children.length + 1);
+    c.appendChild(input);
+}
 
-        const popytInput = document.getElementById('ghp-popyt').value;
-        const popytArray = popytInput.split(',').map(num => parseInt(num.trim()));
-        
-        const naStanie = parseInt(document.getElementById('ghp-stan').value);
-        
-        
-        const partiaInput = document.getElementById('ghp-partia').value;
-        const partia = partiaInput ? parseInt(partiaInput) : null;
+// MAIN
+async function runFullMRP() {
+    try {
+        console.log("klik działa");
 
-        // 2. Przygotowanie paczki danych (JSON)
-        const requestData = {
-            popyt: popytArray,
-            na_stanie: naStanie,
-            partia: partia
+        const popyt = Array.from(document.querySelectorAll('.ghp-input'))
+            .map(i => parseInt(i.value))
+            .filter(n => !isNaN(n));
+
+        const zapasy = {
+            zapalniczka: +document.getElementById("zap_zapalniczka").value,
+            obudowa: +document.getElementById("zap_obudowa").value,
+            mechanizm: +document.getElementById("zap_mechanizm").value,
+            zbiornik: +document.getElementById("zap_zbiornik").value,
+            kółko: +document.getElementById("zap_kolko").value,
+            krzesiwo: +document.getElementById("zap_krzesiwo").value
         };
 
-        try {
-            // 3. Wysłanie POST requesta do  API we Flasku
-            const response = await fetch('/ghp', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            });
+        const czasy = {
+            zapalniczka: +document.getElementById("czas_zapalniczka").value,
+            obudowa: +document.getElementById("czas_obudowa").value,
+            mechanizm: +document.getElementById("czas_mechanizm").value,
+            zbiornik: +document.getElementById("czas_zbiornik").value,
+            kółko: +document.getElementById("czas_kolko").value,
+            krzesiwo: +document.getElementById("czas_krzesiwo").value
+        };
 
-            const data = await response.json();
+        const partie = {
+            zapalniczka: +document.getElementById("part_zapalniczka").value,
+            obudowa: +document.getElementById("part_obudowa").value,
+            mechanizm: +document.getElementById("part_mechanizm").value,
+            zbiornik: +document.getElementById("part_zbiornik").value,
+            kółko: +document.getElementById("part_kolko").value,
+            krzesiwo: +document.getElementById("part_krzesiwo").value
+        };
 
-            // 4. Wyświetlenie wyniku
-            document.getElementById('ghp-result-box').classList.remove('d-none');
-            // Formatowanie JSONa, żeby ładnie wyglądał na ekranie
-            document.getElementById('ghp-result').textContent = JSON.stringify(data, null, 2);
-
-        } catch (error) {
-            alert('Wystąpił błąd!');
-            console.error(error);
-        }
-    });
-    // --- LOGIKA DLA FORMULARZA MRP ---
-document.getElementById('mrpForm').addEventListener('submit', async function(e) {
-    e.preventDefault(); // Zatrzymuje przeładowanie strony
-
-    // 1. Pobieranie danych z formularza MRP
-    const zapotrzebowanieInput = document.getElementById('mrp-zapotrzebowanie').value;
-    const zapotrzebowanieArray = zapotrzebowanieInput.split(',').map(num => parseInt(num.trim()));
-    
-    const naStanie = parseInt(document.getElementById('mrp-stan').value);
-    const czasRealizacji = parseInt(document.getElementById('mrp-czas').value);
-    const partia = parseInt(document.getElementById('mrp-partia').value);
-
-    // 2. Przygotowanie paczki danych (JSON) zgodnie z wymaganiami endpointu /mrp
-    const requestData = {
-        zapotrzebowanie: zapotrzebowanieArray,
-        na_stanie: naStanie,
-        czas_realizacji: czasRealizacji,
-        partia: partia
-    };
-
-    try {
-        // 3. Wysłanie POST requesta do backendu Flaska
-        const response = await fetch('/mrp', {
+        const res = await fetch('/full_mrp', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestData)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ popyt, zapasy, czasy, partie })
         });
 
-        const data = await response.json();
+        const data = await res.json();
+        console.log(data);
 
-        // 4. Wyświetlenie wyniku w zielonym oknie
-        document.getElementById('mrp-result-box').classList.remove('d-none');
-        document.getElementById('mrp-result').textContent = JSON.stringify(data, null, 2);
+        renderTables(data);
 
-    } catch (error) {
-        alert('Wystąpił błąd!');
-        console.error(error);
+    } catch (err) {
+        console.error("BŁĄD:", err);
+        alert("Błąd – sprawdź konsolę");
     }
-});
+}
+
+// TABLE
+function renderTables(data) {
+    let html = "";
+
+    const labels = {
+        zapalniczka: "Zapalniczka",
+        obudowa: "Obudowa",
+        zbiornik: "Zbiornik",
+        mechanizm: "Mechanizm",
+        krzesiwo: "Krzesiwo",
+        kółko: "Kółko"
+    };
+
+
+    const order = [
+        "zapalniczka",
+        "obudowa",
+        "zbiornik",
+        "mechanizm",
+        "krzesiwo",
+        "kółko"
+    ];
+
+    for (const name of order) {
+
+        const mrp = data[name];
+        if (!mrp) continue;
+
+        html += `<h4 class="mt-4 text-capitalize">${name}</h4>`;
+        html += `<table class="table table-bordered text-center">`;
+
+        html += `<tr>
+            <th>Tydzień</th>
+            ${mrp["Całkowite zapotrzebowanie"].map((_, i)=>`<th>${i+1}</th>`).join("")}
+        </tr>`;
+
+        for (const [k, v] of Object.entries(mrp)) {
+            html += `<tr>
+                <td><b>${k}</b></td>
+                ${v.map(x=>`<td>${x}</td>`).join("")}
+            </tr>`;
+        }
+
+        html += `</table>`;
+    }
+
+    document.getElementById("mrpTables").innerHTML = html;
+}
 </script>
 
 </body>

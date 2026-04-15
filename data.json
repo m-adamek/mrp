@@ -1,0 +1,27 @@
+{
+  "popyt": [50, 60, 40, 70],
+  "zapasy": {
+    "zapalniczka": 20,
+    "obudowa": 30,
+    "mechanizm": 10,
+    "zbiornik": 15,
+    "kółko": 40,
+    "krzesiwo": 40
+  },
+  "czasy": {
+    "zapalniczka": 1,
+    "obudowa": 1,
+    "mechanizm": 2,
+    "zbiornik": 1,
+    "kółko": 1,
+    "krzesiwo": 1
+  },
+  "partie": {
+    "zapalniczka": 50,
+    "obudowa": 50,
+    "mechanizm": 30,
+    "zbiornik": 40,
+    "kółko": 100,
+    "krzesiwo": 100
+  }
+}
