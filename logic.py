@@ -2,6 +2,11 @@ import math
 
 # jeżeli produkcja to zapotrzebowanie netto to..:
 
+
+
+
+
+
 def ghp(przewidywany_popyt, na_stanie, wielkość_partii):
     tydzień = len(przewidywany_popyt)
     produkcja = [0] * tydzień
@@ -52,9 +57,11 @@ def mrp(całkowite_zapotrzebowanie, na_stanie, czas_realizacji, wielkość_parti
 
             # możemy wystartować tylko jeśli jeszcze nie startowaliśmy w tym tygodniu
             if not start_w_tygodniu[i]:
-
                 start_w_tygodniu[i] = True
-                planowane_zamówienia[i] = wielkość_partii
+                mnoznik_partii = math.ceil(zapotrzebowanie_netto[i] / wielkość_partii)
+                wielkosc_zamowienia = mnoznik_partii * wielkość_partii
+                
+                planowane_zamówienia[i] = wielkosc_zamowienia
 
                 koniec = i + czas_realizacji
 
