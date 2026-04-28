@@ -69,7 +69,7 @@ def full_mrp(popyt, zapasy, czasy, partie):
 
     #  GHP (produkt końcowy - zapalniczka)
     produkcja, _ = ghp(
-        popyt,
+        popyt["zapalniczka"], # (pobiera listę)
         zapasy["zapalniczka"],
         partie["zapalniczka"]
     )

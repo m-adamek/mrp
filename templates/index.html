@@ -8,12 +8,20 @@
 </head>
 <body class="bg-light">
 
-
-  <!-- przycisk do wczytywania danych - trzeba go uładnić/przesunąć -->
-<form action="/upload" method="post" enctype="multipart/form-data">
-  <input type="file" name="file">
-  <button type="submit">Wczytaj dane</button>
-</form>
+<div class="container mt-3">
+    <div class="card bg-light border-dashed">
+        <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+                <strong>Wczytaj dane z systemu:</strong>
+                <input type="file" id="excelFile" class="form-control-sm ms-2" accept=".xlsx, .xls">
+            </div>
+            <div>
+                <button class="btn btn-success" onclick="uploadExcel()">Wczytaj dane</button>
+                <a href="/download-template" class="btn btn-outline-secondary">Pobierz szablon</a>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="container mt-5">
     <h1 class="text-center mb-4">Planowanie Produkcji (MRP)</h1>
@@ -97,6 +105,36 @@ function addGhpInput() {
 }
 
 // MAIN
+async function uploadExcel() {
+    const fileInput = document.getElementById('excelFile');
+    if (fileInput.files.length === 0) {
+        alert("Wybierz plik Excel!");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    try {
+        const res = await fetch('/upload', {
+            method: 'POST',
+            body: formData 
+        });
+
+        const data = await res.json();
+        
+        if (data.error) {
+            alert(data.error);
+        } else {
+            renderTables(data);
+            alert("Dane wczytane i obliczone pomyślnie!");
+        }
+    } catch (err) {
+        console.error("Błąd przesyłania:", err);
+        alert("Wystąpił błąd podczas wczytywania pliku.");
+    }
+}
+
 async function runFullMRP() {
     try {
         console.log("klik działa");
@@ -196,7 +234,43 @@ function renderTables(data) {
     }
 
     document.getElementById("mrpTables").innerHTML = html;
+
+    html += `<button class="btn btn-primary mt-4 mb-5" onclick="exportToExcel()">Eksportuj wyniki do Excela</button>`;
+    document.getElementById("mrpTables").innerHTML = html;
+    
+    window.lastCalculatedData = data;
 }
+
+async function exportToExcel() {
+    if (!window.lastCalculatedData) {
+        alert("Brak danych do eksportu");
+        return;
+    }
+
+    try {
+        const res = await fetch('/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(window.lastCalculatedData)
+        });
+
+        if (!res.ok) throw new Error("Błąd serwera przy eksporcie");
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "wyniki_mrp_eksport.xlsx";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error("Eksport nie udał się:", err);
+        alert("Nie udało się wyeksportować pliku.");
+    }
+}
+
 </script>
 
 </body>
