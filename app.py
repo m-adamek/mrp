@@ -49,15 +49,19 @@ def mrp_api():
 def full_mrp_api():
     data = request.json
 
+    popyt = data["popyt"]
+
+    if isinstance(popyt, list):
+        popyt = {"zapalniczka": popyt}
+
     wynik = full_mrp(
-        data["popyt"],
+        popyt,
         data["zapasy"],
         data["czasy"],
         data["partie"]
     )
 
     return jsonify(wynik)
-
 @app.route("/download-template")
 def download_template():
 
@@ -144,28 +148,7 @@ def export_results():
         return jsonify({"error": str(e)}), 500
 
 
-# json przez html
 
-#@app.route("/upload", methods=["POST"])
-#def upload():
-    file = request.files["file"]
-    data = json.load(file)
-
-    wyniki = full_mrp(
-        data["popyt"],
-        data["zapasy"],
-        data["czasy"],
-        data["partie"]
-    )
-
-    return wyniki 
-
-# json jako plik w folderze projektu
-
-# def load_data_from_file(path="data.json"):
-#     with open(path, "r", encoding="utf-8") as f:
-#         data = json.load(f)
-#     return data
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))

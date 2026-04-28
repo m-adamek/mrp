@@ -22,44 +22,57 @@ def ghp(przewidywany_popyt, na_stanie, wielkość_partii):
 
 
 # algorytm obliczający mrp dla elementu, dane do użycia w full_mrp
-
 def mrp(całkowite_zapotrzebowanie, na_stanie, czas_realizacji, wielkość_partii):
     tydzień = len(całkowite_zapotrzebowanie)
 
-    planowane_przyjęcia = [0] * tydzień
     przewidywane_na_stanie = [0] * tydzień
     zapotrzebowanie_netto = [0] * tydzień
     planowane_przyjęcie_zamówień = [0] * tydzień
     planowane_zamówienia = [0] * tydzień
 
-    poprzedni_stan = na_stanie
+    produkcja_w_toku = [0] * tydzień
+    start_w_tygodniu = [False] * tydzień
+
+    stan = na_stanie
 
     for i in range(tydzień):
-        przewidywane_na_stanie[i] = poprzedni_stan + planowane_przyjęcia[i] + planowane_przyjęcie_zamówień[i] - całkowite_zapotrzebowanie[i]
 
+        # dodaj zakończoną produkcję
+        stan += produkcja_w_toku[i]
 
-        if przewidywane_na_stanie[i] < 0:
-            zapotrzebowanie_netto[i] = abs(przewidywane_na_stanie[i])      #abs(-15) = 15
+        # odejmij popyt
+        stan -= całkowite_zapotrzebowanie[i]
 
-            ilość = wielkość_partii
-            
-            planowane_przyjęcie_zamówień[i] = ilość
-            przewidywane_na_stanie[i] += ilość
+        # zapisz stan
+        przewidywane_na_stanie[i] = stan
 
-            if i - czas_realizacji >= 0:
-                planowane_zamówienia[i - czas_realizacji] = ilość
+        # jeśli brakuje → trzeba produkować
+        if stan < 0:
+            zapotrzebowanie_netto[i] = abs(stan)
 
-        poprzedni_stan = przewidywane_na_stanie[i]
+            # możemy wystartować tylko jeśli jeszcze nie startowaliśmy w tym tygodniu
+            if not start_w_tygodniu[i]:
+
+                start_w_tygodniu[i] = True
+                planowane_zamówienia[i] = wielkość_partii
+
+                koniec = i + czas_realizacji
+
+                if koniec < tydzień:
+                    produkcja_w_toku[koniec] += wielkość_partii
+                    planowane_przyjęcie_zamówień[koniec] += wielkość_partii
+
+                # popraw stan (przyszły)
+                # UWAGA: tu NIE dodajemy do stanu od razu!
+                # bo produkcja jeszcze trwa
 
     return {
         "Całkowite zapotrzebowanie": całkowite_zapotrzebowanie,
-        "Planowane przyjęcia": planowane_przyjęcia,
         "Przewidywane na stanie": przewidywane_na_stanie,
         "Zapotrzebowanie netto": zapotrzebowanie_netto,
         "Planowane przyjęcie zamówień": planowane_przyjęcie_zamówień,
         "Planowane zamówienia": planowane_zamówienia
     }
-
 
 # algorytm używający algorytmu mrp i ghp do uzyskania ostatecznych wyników dla każdego z elementów
 
