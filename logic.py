@@ -23,58 +23,50 @@ def ghp(przewidywany_popyt, na_stanie, wielkość_partii):
 
 # algorytm obliczający mrp dla elementu, dane do użycia w full_mrp
 def mrp(całkowite_zapotrzebowanie, na_stanie, czas_realizacji, wielkość_partii):
-    tydzień = len(całkowite_zapotrzebowanie)
+    n = len(całkowite_zapotrzebowanie)
 
-    przewidywane_na_stanie = [0] * tydzień
-    zapotrzebowanie_netto = [0] * tydzień
-    planowane_przyjęcie_zamówień = [0] * tydzień
-    planowane_zamówienia = [0] * tydzień
-
-    produkcja_w_toku = [0] * tydzień
-    start_w_tygodniu = [False] * tydzień
+    planowane_przyjęcia = [0] * n
+    przewidywane_na_stanie = [0] * n
+    zapotrzebowanie_netto = [0] * n
+    planowane_przyjęcie_zamówień = [0] * n
+    planowane_zamówienia = [0] * n
 
     stan = na_stanie
 
-    for i in range(tydzień):
+    for i in range(n):
 
-        # dodaj zakończoną produkcję
-        stan += produkcja_w_toku[i]
+        # przyjęcia z wcześniejszych zamówień
+        stan += planowane_przyjęcia[i] + planowane_przyjęcie_zamówień[i]
 
-        # odejmij popyt
+        if stan < całkowite_zapotrzebowanie[i]:
+            brak = całkowite_zapotrzebowanie[i] - stan
+            zapotrzebowanie_netto[i] = brak
+
+            ilość = wielkość_partii
+
+            release = i - czas_realizacji
+
+            if release >= 0:
+                # ✅ poprawny przypadek
+                planowane_zamówienia[release] = ilość
+                planowane_przyjęcie_zamówień[i] = ilość
+                stan += ilość
+            else:
+                # ❗ brak możliwości zamówienia → brak dostawy
+                # stan może być ujemny
+                pass
+
         stan -= całkowite_zapotrzebowanie[i]
-
-        # zapisz stan
         przewidywane_na_stanie[i] = stan
-
-        # jeśli brakuje → trzeba produkować
-        if stan < 0:
-            zapotrzebowanie_netto[i] = abs(stan)
-
-            # możemy wystartować tylko jeśli jeszcze nie startowaliśmy w tym tygodniu
-            if not start_w_tygodniu[i]:
-
-                start_w_tygodniu[i] = True
-                planowane_zamówienia[i] = wielkość_partii
-
-                koniec = i + czas_realizacji
-
-                if koniec < tydzień:
-                    produkcja_w_toku[koniec] += wielkość_partii
-                    planowane_przyjęcie_zamówień[koniec] += wielkość_partii
-
-                # popraw stan (przyszły)
-                # UWAGA: tu NIE dodajemy do stanu od razu!
-                # bo produkcja jeszcze trwa
 
     return {
         "Całkowite zapotrzebowanie": całkowite_zapotrzebowanie,
+        "Planowane przyjęcia": planowane_przyjęcia,
         "Przewidywane na stanie": przewidywane_na_stanie,
         "Zapotrzebowanie netto": zapotrzebowanie_netto,
-        "Planowane przyjęcie zamówień": planowane_przyjęcie_zamówień,
-        "Planowane zamówienia": planowane_zamówienia
+        "Planowane zamówienia": planowane_zamówienia,
+        "Planowane przyjęcie zamówień": planowane_przyjęcie_zamówień
     }
-
-# algorytm używający algorytmu mrp i ghp do uzyskania ostatecznych wyników dla każdego z elementów
 
 def full_mrp(popyt, zapasy, czasy, partie):
 
@@ -89,7 +81,7 @@ def full_mrp(popyt, zapasy, czasy, partie):
 
     # MRP dla zapalniczki (POZIOM 0)
     mrp_zapalniczka = mrp(
-        produkcja,
+        popyt["zapalniczka"],   
         zapasy["zapalniczka"],
         czasy["zapalniczka"],
         partie["zapalniczka"]
@@ -98,7 +90,7 @@ def full_mrp(popyt, zapasy, czasy, partie):
     wyniki["zapalniczka"] = mrp_zapalniczka  #zapis wyników do słownika z wynikami
 
     # POZIOM 1 (BOM)
-    parent_orders = mrp_zapalniczka["Planowane zamówienia"]
+    parent_orders = mrp_zapalniczka["Planowane przyjęcie zamówień"]
 
     # obudowa
     mrp_obudowa = mrp(

@@ -1,17 +1,48 @@
 from flask import Flask, render_template, request, jsonify, send_file
 from logic import ghp, mrp, full_mrp
 import os
-import json
-import csv
 import pandas as pd
 import io
 
-
 app = Flask(__name__)
+
+
+# 
+def clean_series(series):
+    return [x if x != 0 else "" for x in series]
+
+
+# 
+def format_output(wynik):
+    kolejność = [
+        "Całkowite zapotrzebowanie",
+        "Planowane przyjęcia",
+        "Przewidywane na stanie",
+        "Zapotrzebowanie netto",
+        "Planowane zamówienia",
+        "Planowane przyjęcie zamówień"
+    ]
+
+    formatted = {}
+
+    for produkt, dane in wynik.items():
+        formatted[produkt] = {}
+
+        for key in kolejność:
+            if key in dane:
+                formatted[produkt][key] = clean_series(dane[key])
+            else:
+                # jeśli czegoś brak → pusta linia
+                length = len(next(iter(dane.values())))
+                formatted[produkt][key] = [""] * length
+
+    return formatted
+
 
 @app.route("/")
 def home():
     return render_template("index.html")
+
 
 @app.route("/ghp", methods=["POST"])
 def ghp_api():
@@ -40,11 +71,10 @@ def mrp_api():
         data["partia"]
     )
 
-    return jsonify(wynik)
+    return jsonify(format_output({"mrp": wynik})["mrp"])
 
 
-# z tego lecą wyniki pełne (w test.py możesz sprawdzić jak wygląda output):
-
+# 
 @app.route("/full_mrp", methods=["POST"])
 def full_mrp_api():
     data = request.json
@@ -61,33 +91,42 @@ def full_mrp_api():
         data["partie"]
     )
 
-    return jsonify(wynik)
+    return jsonify(format_output(wynik))
+
+
 @app.route("/download-template")
 def download_template():
-
     path = "static/szablon_mrp.xlsx"
     return send_file(
-        path, 
-        as_attachment=True, 
+        path,
+        as_attachment=True,
         download_name="Szablon_Danych_MRP.xlsx"
     )
+
+
+# 
+def safe_int(value):
+    return int(value) if pd.notnull(value) else 0
 
 
 @app.route("/upload", methods=["POST"])
 def upload():
     if 'file' not in request.files:
         return jsonify({"error": "Brak pliku"}), 400
-    
+
     file = request.files["file"]
 
     try:
         df_ghp = pd.read_excel(file, sheet_name='Popyt produktu (GHP)')
         df_bom = pd.read_excel(file, sheet_name='Parametry MRP (BOM)')
 
-        kolumny_tygodni = [col for col in df_ghp.columns if 'Tydzień' in str(col)]
+        # 🔥 bardziej odporne na nazwy
+        kolumny_tygodni = [col for col in df_ghp.columns if 'tyd' in str(col).lower()]
         liczba_tygodni = len(kolumny_tygodni)
 
-        popyt_glowny = [int(df_ghp.iloc[0][tydz]) if pd.notnull(df_ghp.iloc[0][tydz]) else 0 for tydz in kolumny_tygodni]
+        popyt_glowny = [
+            safe_int(df_ghp.iloc[0][tydz]) for tydz in kolumny_tygodni
+        ]
 
         popyt_wszystkie = {}
         zapasy = {}
@@ -95,47 +134,59 @@ def upload():
         partie = {}
 
         for _, row in df_bom.iterrows():
-            nazwa = str(row['Część']).strip().lower()
-            
-            if "zapalniczka" in nazwa:
-                popyt_wszystkie[nazwa] = popyt_glowny
-            else:
-                popyt_wszystkie[nazwa] = [0] * liczba_tygodni
-            
-            zapasy[nazwa] = int(row['Na stanie']) if 'Na stanie' in row else 0
-            czasy[nazwa] = int(row['Czas realizacji'])
-            partie[nazwa] = int(row['Wielkość partii'])
+            raw = str(row['Część']).strip().lower()
 
+            
+            if "zapalniczka" in raw:
+                nazwa = "zapalniczka"
+                popyt_wszystkie[nazwa] = popyt_glowny
+            elif "obudowa" in raw:
+                nazwa = "obudowa"
+            elif "mechanizm" in raw:
+                nazwa = "mechanizm"
+            elif "zbiornik" in raw:
+                nazwa = "zbiornik"
+            elif "kółko" in raw or "kolko" in raw:
+                nazwa = "kółko"
+            elif "krzesiwo" in raw:
+                nazwa = "krzesiwo"
+            else:
+                continue
+
+            if nazwa != "zapalniczka":
+                popyt_wszystkie[nazwa] = [0] * liczba_tygodni
+
+            zapasy[nazwa] = safe_int(row['Na stanie'])
+            czasy[nazwa] = safe_int(row['Czas realizacji'])
+            partie[nazwa] = safe_int(row['Wielkość partii'])
 
         wyniki = full_mrp(popyt_wszystkie, zapasy, czasy, partie)
 
-        return jsonify(wyniki)
+        return jsonify(format_output(wyniki))
 
     except Exception as e:
         return jsonify({"error": f"Błąd: {str(e)}"}), 500
 
+
 @app.route("/export", methods=["POST"])
 def export_results():
-    data = request.json 
+    data = request.json
     if not data:
         return jsonify({"error": "Brak danych do eksportu"}), 400
-    
+
     output = io.BytesIO()
-    
+
     try:
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             for produkt, info in data.items():
-                # dataframe z wyników (pionowy)
                 df = pd.DataFrame(info)
-                
-                liczba_tygodni = len(df)
+
+                liczba_tygodni = len(df.columns)
                 nazwy_kolumn = [f"Tydzień {i+1}" for i in range(liczba_tygodni)]
-                
-                df_horizontal = df.transpose()
-                df_horizontal.columns = nazwy_kolumn
-                
-                sheet_name = str(produkt).capitalize()[:31]
-                df_horizontal.to_excel(writer, sheet_name=sheet_name)
+
+                df.columns = nazwy_kolumn
+                df.to_excel(writer, sheet_name=str(produkt)[:31])
+
         output.seek(0)
         return send_file(
             output,
@@ -143,12 +194,14 @@ def export_results():
             as_attachment=True,
             download_name="wyniki_mrp.xlsx"
         )
+
     except Exception as e:
-        print(f"Błąd eksportu: {e}")
         return jsonify({"error": str(e)}), 500
 
 
-
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 10000)),
+        debug=True
+    )

@@ -189,56 +189,66 @@ async function runFullMRP() {
 
 // TABLE
 function renderTables(data) {
-    let html = "";
+    const container = document.getElementById("mrpTables");
+    container.innerHTML = "";
 
-    const labels = {
-        zapalniczka: "Zapalniczka",
-        obudowa: "Obudowa",
-        zbiornik: "Zbiornik",
-        mechanizm: "Mechanizm",
-        krzesiwo: "Krzesiwo",
-        kółko: "Kółko"
-    };
+    const rowOrder = [
+        "Całkowite zapotrzebowanie",
+        "Planowane przyjęcia",
+        "Przewidywane na stanie",
+        "Zapotrzebowanie netto",
+        "Planowane zamówienia",
+        "Planowane przyjęcie zamówień"
+    ];
 
 
-    const order = [
+    const productOrder = [
         "zapalniczka",
         "obudowa",
-        "zbiornik",
         "mechanizm",
         "krzesiwo",
         "kółko"
     ];
 
-    for (const name of order) {
+    productOrder.forEach(produkt => {
 
-        const mrp = data[name];
-        if (!mrp) continue;
+        if (!data[produkt]) return; // pomiń jeśli brak danych
 
-        html += `<h4 class="mt-4 text-capitalize">${name}</h4>`;
-        html += `<table class="table table-bordered text-center">`;
+        const produktData = data[produkt];
+        const weeks = produktData[rowOrder[0]].length;
 
-        html += `<tr>
-            <th>Tydzień</th>
-            ${mrp["Całkowite zapotrzebowanie"].map((_, i)=>`<th>${i+1}</th>`).join("")}
-        </tr>`;
+        let html = `<div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <b>${produkt.toUpperCase()}</b>
+            </div>
+            <div class="card-body">
+            <table class="table table-bordered text-center">
+        `;
 
-        for (const [k, v] of Object.entries(mrp)) {
-            html += `<tr>
-                <td><b>${k}</b></td>
-                ${v.map(x=>`<td>${x}</td>`).join("")}
-            </tr>`;
+        // HEADER
+        html += "<tr><th></th>";
+        for (let i = 0; i < weeks; i++) {
+            html += `<th>T${i + 1}</th>`;
         }
+        html += "</tr>";
 
-        html += `</table>`;
-    }
+        // ROWS
+        rowOrder.forEach(key => {
+            const values = produktData[key] || new Array(weeks).fill("");
 
-    document.getElementById("mrpTables").innerHTML = html;
+            html += `<tr><td><b>${key}</b></td>`;
 
-    html += `<button class="btn btn-primary mt-4 mb-5" onclick="exportToExcel()">Eksportuj wyniki do Excela</button>`;
-    document.getElementById("mrpTables").innerHTML = html;
-    
-    window.lastCalculatedData = data;
+            for (let i = 0; i < weeks; i++) {
+                html += `<td>${values[i] === 0 ? "" : values[i]}</td>`;
+            }
+
+            html += "</tr>";
+        });
+
+        html += "</table></div></div>";
+
+        container.innerHTML += html;
+    });
 }
 
 async function exportToExcel() {
